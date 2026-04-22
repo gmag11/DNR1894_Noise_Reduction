@@ -1,3 +1,35 @@
 .github/prompts/
 .github/skills/
 .env
+
+# Build output
+build/
+out/
+
+# Compiled binaries
+*.exe
+*.obj
+*.lib
+*.exp
+*.ilk
+*.pdb
+*.dll
+*.vst3
+*.so
+*.dylib
+
+# Test binaries
+tests/**/*.exe
+tests/**/*.obj
+test_dsp.obj
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# VS / CMake generated
+.vs/
+*.user
+*.suo
+CMakeSettings.json
