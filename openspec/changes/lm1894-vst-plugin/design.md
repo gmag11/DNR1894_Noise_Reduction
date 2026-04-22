@@ -156,6 +156,43 @@ Cada parámetro debe tener:
 - valor por defecto;
 - texto de display desacoplado del DSP.
 
+Para la V1, el contrato recomendado queda fijado así:
+
+| Parameter ID | Tipo | Rango | Default | Notas |
+|---|---|---:|---:|---|
+| `sensitivityDb` | float | -18 dB a +18 dB | 0 dB | Offset respecto al umbral nominal del perfil |
+| `minBandwidthHz` | float | 800 Hz a 4000 Hz | 1000 Hz | Límite inferior del cutoff global |
+| `maxBandwidthHz` | float | 8000 Hz a 40000 Hz | 35000 Hz | Límite superior del cutoff global |
+| `attackMs` | float | 0.05 ms a 5.0 ms | 0.5 ms | Objetivo LM1894-like de apertura rápida |
+| `releaseMs` | float | 10 ms a 250 ms | 60 ms | Cierre más lento para preservar ambiente |
+| `stageCount` | int | 1 a 4 | 1 | 1 preserva el comportamiento base; 2..4 añaden pendiente y reducción |
+| `sourceProfile` | enum | `generic`, `tape`, `fm`, `tv` | `tape` | Determina ponderación y posibles muescas del sidechain |
+| `bypass` | bool | off/on | off | Bypass duro del procesado |
+| `outputTrimDb` | float | -12 dB a +12 dB | 0 dB | Compensa nivel percibido entre ajustes |
+
+Decisiones adicionales para V1:
+- `Mix` queda fuera de la V1 porque no forma parte del comportamiento original ni es necesario para validar el modelo.
+- `stageCount` debe exponerse como entero discreto, no como continuo automatizado.
+- `minBandwidthHz` nunca podrá superar `maxBandwidthHz`; si el usuario cruza ambos valores, el layout debe imponer saturación o reordenación determinista.
+- `sourceProfile` debe tener semántica fija: `generic` sin notch adicional, `tape` calibración base, `fm` con supresión del piloto de 19 kHz y `tv` con supresión en torno a 15.734 kHz.
+
+Representación interna recomendada:
+
+```text
+Normalized host value
+    |
+    v
+ParameterLayout conversion
+    |
+    v
+Lm1894Parameters snapshot
+    |
+    v
+Lm1894Model::setParameters(...)
+```
+
+Esto evita que el DSP dependa de rangos normalizados del host o de clases específicas de JUCE.
+
 ### 7. Estado y presets
 
 `PluginState` debe encapsular:
@@ -165,6 +202,76 @@ Cada parámetro debe tener:
 - versión interna de preset o schema de estado.
 
 Esto evita que el serializado dependa de detalles del editor o de objetos concretos de JUCE difíciles de migrar.
+
+La API mínima recomendada para la capa de aplicación queda así:
+
+```cpp
+enum class SourceProfile
+{
+    generic,
+    tape,
+    fm,
+    tv,
+};
+
+struct Lm1894Parameters
+{
+    float sensitivityDb;
+    float minBandwidthHz;
+    float maxBandwidthHz;
+    float attackMs;
+    float releaseMs;
+    int stageCount;
+    SourceProfile sourceProfile;
+    bool bypass;
+    float outputTrimDb;
+};
+
+struct ProcessSpec
+{
+    double sampleRate;
+    uint32_t maximumBlockSize;
+    uint32_t numChannels;
+};
+
+struct StereoBufferView
+{
+    float* left;
+    float* right;
+    uint32_t numSamples;
+};
+
+struct Lm1894MeterValues
+{
+    float normalizedBandwidthOpen;
+    float detectorActivity;
+    float estimatedReductionDb;
+    int activeStageCount;
+    bool bypass;
+};
+
+class Lm1894Model
+{
+public:
+    void prepare(const ProcessSpec& spec);
+    void reset();
+    void setParameters(const Lm1894Parameters& parameters);
+    void process(StereoBufferView buffer);
+    Lm1894MeterValues getMeterValues() const;
+};
+```
+
+Criterios de esta API:
+- sin tipos JUCE en la firma pública del DSP;
+- una sola llamada `setParameters` por snapshot para evitar incoherencias entre parámetros dependientes;
+- `prepare` y `reset` separados para distinguir cambios de formato de reinicios de estado;
+- `getMeterValues` como lectura ligera apta para publicar en `MeterState`.
+
+Subcomponentes internos recomendados, no expuestos al host:
+- `SidechainDetector` para suma estéreo, ponderación, notch y envolvente;
+- `CascadedFilterBank` para 1..N etapas enlazadas;
+- `VariableLpStage` como unidad de filtrado por etapa;
+- `CutoffMapper` o lógica equivalente para convertir detector + límites + número de etapas en cutoff por etapa.
 
 ### 8. Metros y editor
 
@@ -235,17 +342,115 @@ $$f_{c,global} = f_{c,stage} \sqrt{10^{0.3/N} - 1}$$
 
 Por tanto, el diseño interno deberá calcular un cutoff por etapa a partir del cutoff global deseado, en lugar de reutilizar sin más el mismo cutoff por etapa y aceptar un estrechamiento accidental del rango útil.
 
-### 14. Parámetros físicos internos separados de controles de usuario
+### 14. Curva de mapeo entre detector y cutoff global
+
+La revisión del datasheet y de las gráficas relevantes obliga a fijar una decisión más precisa: el mapeo entre actividad del detector y cutoff global no debe modelarse como una interpolación lineal simple.
+
+Las referencias más útiles son:
+- Figure 8 del datasheet: `Main Signal Path Bandwidth vs Voltage Control`, que muestra una relación fuertemente no lineal entre señal de control y ancho de banda.
+- Figure 12 del datasheet: `Output vs Frequency`, que confirma que el sistema es lineal en amplitud de salida pero no en ancho de banda efectivo para tonos estacionarios.
+- Figure 13 del datasheet: `-3 dB Bandwidth vs Frequency and Control Signal`, que muestra que distintas frecuencias en la ruta de control generan diferentes familias de roll-off.
+- Figure 7 del datasheet: `Gain of Control Path vs Frequency`, que deja claro que la ruta de control pondera con mucha más fuerza la energía entre aproximadamente 2 kHz y 10 kHz que el contenido por debajo de 1 kHz.
+
+La consecuencia práctica es que la simulación V1 debe usar tres dominios distintos:
+
+```text
+Audio estéreo
+    -> señal ponderada de sidechain
+    -> envolvente / detector equivalente
+    -> curva no lineal en log-frecuencia
+    -> cutoff global objetivo
+```
+
+#### 14.1 Ponderación del sidechain
+
+La ruta de control digital debe aproximar estas propiedades observadas en las gráficas:
+- sensibilidad muy reducida por debajo de 200 Hz a 500 Hz;
+- crecimiento fuerte entre aproximadamente 500 Hz y 4 kHz;
+- máxima sensibilidad útil en la zona de 4 kHz a 10 kHz;
+- notch opcional en 19 kHz para perfil FM;
+- notch opcional alrededor de 15.734 kHz para perfil TV.
+
+No hace falta reproducir exactamente la topología RC del chip, pero sí la intención espectral: contenido grave no debe abrir apreciablemente el ancho de banda, mientras que hiss y contenido brillante sí deben hacerlo.
+
+#### 14.2 Variable interna de detector equivalente
+
+Para alinear el diseño con la documentación del LM1894, el modelo interno usará una variable de detector equivalente `v_eq` normalizada al rango eléctrico documentado del chip.
+
+- mínimo de referencia: `v_eq_min = 1.1 V`
+- máximo de referencia: `v_eq_max = 3.8 V`
+
+La sensibilidad y el perfil de fuente desplazan horizontalmente la curva al convertir la envolvente del sidechain a `v_eq`.
+
+Esto permite dos cosas:
+- razonar sobre calibración usando el lenguaje del datasheet y AN-0390;
+- desacoplar la medición interna del detector de la implementación concreta del follower digital.
+
+#### 14.3 Mapeo recomendado de `v_eq` a cutoff global
+
+La V1 debe usar una curva monotónica por puntos interpolada en log-frecuencia, no una recta. La siguiente tabla resume el comportamiento objetivo para el preset base `tape` con rango por defecto cercano a 1 kHz-35 kHz:
+
+| `v_eq` equivalente | Cutoff global objetivo |
+|---:|---:|
+| 1.10 V | 1.0 kHz |
+| 1.25 V | 1.3 kHz |
+| 1.35 V | 1.8 kHz |
+| 1.50 V | 2.5 kHz |
+| 1.75 V | 4.0 kHz |
+| 2.05 V | 7.0 kHz |
+| 2.40 V | 12.0 kHz |
+| 2.80 V | 20.0 kHz |
+| 3.20 V | 28.0 kHz |
+| 3.80 V | 35.0 kHz |
+
+La forma exacta de interpolación recomendada es:
+- interpolación monotónica suave entre puntos;
+- dominio de interpolación en `log10(f)` y no en Hz lineales;
+- clamp duro a los límites mínimo y máximo de ancho de banda configurados por el usuario.
+
+Esta tabla intenta conciliar tres hechos documentados:
+- el mínimo absoluto puede acercarse a 1 kHz;
+- la nota del datasheet indica que en operación real el sistema suele trabajar con un mínimo nominal más próximo a 2 kHz para lograr alrededor de 10 dB de reducción subjetivamente útil;
+- la gráfica Figure 8 muestra una apertura progresivamente más rápida al acercarse a la zona alta del ancho de banda.
+
+#### 14.4 Regla de escalado para otros rangos
+
+Cuando el usuario cambie `minBandwidthHz` o `maxBandwidthHz`, la curva base no debe rehacerse en Hz absolutos. Debe conservar su forma relativa en log-frecuencia.
+
+La regla recomendada es:
+
+$$
+\log_{10}(f_c(u)) = \log_{10}(f_{min}) + s(u)\,\left[\log_{10}(f_{max}) - \log_{10}(f_{min})\right]
+$$
+
+donde `s(u)` es una curva de forma fija derivada de la tabla anterior y `u` es la versión normalizada de `v_eq` en el rango $[0,1]$.
+
+Esto hace que cambiar el rango configurable no destruya la personalidad del LM1894.
+
+#### 14.5 Regla de calibración por perfil
+
+Los perfiles no deben cambiar la tabla de mapeo principal salvo que sea estrictamente necesario. La V1 debe modificar primero:
+- la ponderación del sidechain;
+- el offset de sensibilidad;
+- los notches opcionales.
+
+El objetivo es que `sourceProfile` cambie la forma en que el detector llega a `v_eq`, no la personalidad básica del filtro una vez que el detector ya decidió abrirlo.
+
+#### 14.6 Consecuencia para defaults
+
+Aunque el mínimo absoluto por defecto se mantenga en 1 kHz para respetar el chip, el preset `tape` debe calibrarse para que el ruido de cinta en reposo tienda a abrir ligeramente el sistema hacia una zona nominal cercana a 1.8 kHz-2.2 kHz, no a quedarse pegado al mínimo absoluto. Esto está más alineado con AN-0390 y con la nota del datasheet sobre la reducción típica de alrededor de 10 dB.
+
+### 15. Parámetros físicos internos separados de controles de usuario
 
 La implementación puede mantener parámetros internos expresados como sensibilidad, frecuencia mínima, frecuencia máxima, ataque y release, mientras que la UI podrá agruparlos en controles más musicales o más cercanos al datasheet. Esto permite una experiencia de usuario razonable sin perder trazabilidad con el comportamiento del LM1894.
 
 El número de etapas formará parte de esos parámetros expuestos o de un modo avanzado claramente visible, ya que modifica de forma audible la pendiente y la reducción alcanzable.
 
-### 15. Perfiles de fuente como presets controlados
+### 16. Perfiles de fuente como presets controlados
 
 La spec incluirá perfiles orientados a fuentes reales porque AN-0390 demuestra que la calibración depende del ruido de origen. En vez de obligar a recrear toda la electrónica de cassette, FM o TV, esos perfiles actuarán como presets reproducibles sobre la ruta de control: sensibilidad, ponderación y, cuando aplique, muesca en sidechain para 19 kHz o 15.734 kHz.
 
-### 16. Estrategia multiplataforma
+### 17. Estrategia multiplataforma
 
 La primera planificación de producto debe asumir:
 - Windows como target principal de desarrollo inicial;
@@ -256,11 +461,17 @@ La primera planificación de producto debe asumir:
 
 El punto importante es no mezclar lógica de UI o clases de JUCE dentro del núcleo DSP. Si el DSP permanece agnóstico al framework, validar comportamiento y mantener el proyecto será bastante más simple.
 
-### 17. Validación basada en comportamiento
+### 18. Validación basada en comportamiento
 
 La aceptación no se basará sólo en escucha subjetiva. Se exigirán pruebas con bursts, ruido y barridos para comprobar que el tiempo de apertura/cierre, el enlace estéreo y el rango de cutoff se comportan dentro de tolerancias razonables respecto al LM1894 documentado.
 
-### 18. Plan técnico para una V1 ampliable
+Además, la validación de la V1 debe incluir comprobaciones explícitas del mapeo:
+- que el sidechain apenas abra el sistema con energía concentrada por debajo de 500 Hz;
+- que el mismo nivel efectivo en la zona de 5 kHz a 8 kHz abra notablemente más el cutoff;
+- que el preset `tape` con ruido de referencia mantenga una apertura nominal cercana a 2 kHz;
+- que la curva `v_eq -> cutoff` preserve su forma al escalar `minBandwidthHz` y `maxBandwidthHz`.
+
+### 19. Plan técnico para una V1 ampliable
 
 El trabajo posterior debería seguir este desglose:
 

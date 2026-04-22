@@ -56,6 +56,22 @@ The plugin MUST expose and implement control-path sensitivity plus envelope timi
 - **WHEN** the burst ends and the remaining signal energy falls below the opening threshold
 - **THEN** the bandwidth MUST decay back toward its narrower state over tens of milliseconds rather than collapsing immediately
 
+### Requirement: Detector-To-Cutoff Mapping Fidelity
+
+The plugin MUST use a non-linear detector-to-cutoff mapping that reflects the LM1894 control behavior documented in the datasheet, rather than a simple linear interpolation of cutoff versus signal level.
+
+#### Scenario: Low-frequency content does not open the filter aggressively
+- **WHEN** the sidechain is driven mainly by low-frequency content below approximately 500 Hz
+- **THEN** the plugin MUST keep bandwidth opening materially lower than it would for an equal effective bright-sidechain stimulus in the upper-mid and high-frequency region
+
+#### Scenario: Bright-sidechain energy opens the filter strongly
+- **WHEN** the sidechain is driven by energy concentrated around the LM1894-sensitive region near 2 kHz to 10 kHz
+- **THEN** the detector-to-cutoff mapping MUST open the global cutoff significantly faster than for equally strong low-frequency content
+
+#### Scenario: Nominal tape calibration does not pin the filter to the absolute minimum
+- **WHEN** the plugin uses default tape-oriented calibration with reference hiss-like source material
+- **THEN** the steady-state cutoff SHOULD settle near a nominal low-bandwidth operating region around 2 kHz rather than staying fixed at the absolute minimum bandwidth limit
+
 ### Requirement: Source Calibration Profiles
 
 The plugin MUST support calibration for different source types by providing at least Generic, Tape, FM, and TV/Video operating profiles or equivalent recallable parameter sets.
