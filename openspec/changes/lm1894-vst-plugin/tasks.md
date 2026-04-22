@@ -33,10 +33,10 @@
 
 ## 5. Verification
 
-- [ ] 5.1 Crear pruebas con ruido, bursts y tonos para validar ataque, release y respuesta espectral dinámica.
-- [ ] 5.2 Verificar que un estímulo brillante en un solo canal no desplace la imagen estéreo al compartir la ruta de control.
-- [ ] 5.3 Comparar el comportamiento del plugin en varios sample rates y tamaños de bloque para asegurar consistencia.
-- [ ] 5.4 Comparar 1, 2 y varias etapas para confirmar aumento de atenuación en altas frecuencias, compensación correcta de cutoff global y ausencia de inestabilidad audible.
-- [ ] 5.5 Verificar automatización, persistencia y carga del plugin en hosts representativos soportados por JUCE.
+- [x] 5.1 Crear pruebas con ruido, bursts y tonos para validar ataque, release y respuesta espectral dinámica.
+- [x] 5.2 Verificar que un estímulo brillante en un solo canal no desplace la imagen estéreo al compartir la ruta de control.
+- [x] 5.3 Comparar el comportamiento del plugin en varios sample rates y tamaños de bloque para asegurar consistencia.
+- [x] 5.4 Comparar 1, 2 y varias etapas para confirmar aumento de atenuación en altas frecuencias, compensación correcta de cutoff global y ausencia de inestabilidad audible.
+- [x] 5.5 Verificar automatización, persistencia y carga del plugin en hosts representativos soportados por JUCE.
 - [ ] 5.6 Validar la migración de targets comprobando que Windows VST3, macOS AU y Linux VST3/standalone comparten el mismo núcleo DSP y layout de parámetros.
-- [ ] 5.7 Validar el mapeo `detector -> cutoff` frente a los puntos ancla definidos y comprobar que el preset `tape` se asienta en una apertura nominal cercana a 2 kHz con ruido de referencia.
+- [x] 5.7 Validar el mapeo `detector -> cutoff` frente a los puntos ancla definidos y comprobar que el preset `tape` se asienta en una apertura nominal cercana a 2 kHz con ruido de referencia.
