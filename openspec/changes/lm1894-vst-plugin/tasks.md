@@ -9,11 +9,11 @@
 
 ## 2. DSP Implementation
 
-- [ ] 2.1 Implementar la ruta de control compartida con suma estéreo, ponderación frecuencial, detector y suavizado temporal.
-- [ ] 2.2 Implementar dos filtros paso bajo enlazados con cutoff continuo y comportamiento estable en tiempo real.
-- [ ] 2.3 Añadir perfiles de fuente reutilizando la misma arquitectura base del modelo.
-- [ ] 2.4 Permitir encadenar varias etapas idénticas en serie reutilizando el mismo control global y sin introducir artefactos al cambiar el número de etapas.
-- [ ] 2.5 Aislar el núcleo DSP en una capa independiente del framework para que pueda probarse sin depender de JUCE ni del host.
+- [x] 2.1 Implementar la ruta de control compartida con suma estéreo, ponderación frecuencial, detector y suavizado temporal.
+- [x] 2.2 Implementar dos filtros paso bajo enlazados con cutoff continuo y comportamiento estable en tiempo real.
+- [x] 2.3 Añadir perfiles de fuente reutilizando la misma arquitectura base del modelo.
+- [x] 2.4 Permitir encadenar varias etapas idénticas en serie reutilizando el mismo control global y sin introducir artefactos al cambiar el número de etapas.
+- [x] 2.5 Aislar el núcleo DSP en una capa independiente del framework para que pueda probarse sin depender de JUCE ni del host.
 
 ## 3. Architecture And State
 
