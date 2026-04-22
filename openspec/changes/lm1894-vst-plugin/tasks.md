@@ -24,12 +24,12 @@
 
 ## 4. Plugin Productization
 
-- [ ] 4.1 Crear la base del proyecto con JUCE orientada a un plugin multiplataforma.
-- [ ] 4.2 Exponer parámetros de sensibilidad, ancho de banda mínimo y máximo, tiempos, perfil, número de etapas, bypass y mix o trim de salida si procede.
-- [ ] 4.3 Diseñar metering para visualizar apertura de ancho de banda y/o reducción de ruido estimada.
-- [ ] 4.4 Garantizar persistencia de estado, automatización estable y compatibilidad con operación estéreo en hosts VST.
-- [ ] 4.5 Configurar Windows + VST3 como primer target oficial y dejar preparada la generación de standalone.
-- [ ] 4.6 Preparar la activación posterior de AU en macOS y VST3/standalone en Linux sin reorganizar el código base.
+- [x] 4.1 Crear la base del proyecto con JUCE orientada a un plugin multiplataforma.
+- [x] 4.2 Exponer parámetros de sensibilidad, ancho de banda mínimo y máximo, tiempos, perfil, número de etapas, bypass y mix o trim de salida si procede.
+- [x] 4.3 Diseñar metering para visualizar apertura de ancho de banda y/o reducción de ruido estimada.
+- [x] 4.4 Garantizar persistencia de estado, automatización estable y compatibilidad con operación estéreo en hosts VST.
+- [x] 4.5 Configurar Windows + VST3 como primer target oficial y dejar preparada la generación de standalone.
+- [x] 4.6 Preparar la activación posterior de AU en macOS y VST3/standalone en Linux sin reorganizar el código base.
 
 ## 5. Verification
 
