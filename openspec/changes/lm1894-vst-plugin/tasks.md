@@ -17,7 +17,7 @@
 
 ## 3. Architecture And State
 
-- [ ] 3.1 Definir la estructura de módulos del proyecto separando `plugin/juce`, `src/dsp`, `src/params`, `src/app` y `tests`.
+- [x] 3.1 Definir la estructura de módulos del proyecto separando `plugin/juce`, `src/dsp`, `src/params`, `src/app` y `tests`.
 - [ ] 3.2 Definir un `ParameterLayout` único con identificadores estables, defaults, rangos y conversiones a unidades internas.
 - [ ] 3.3 Definir `PluginState` y el formato de serialización de presets y estado del host.
 - [ ] 3.4 Definir `MeterState` thread-safe para comunicar actividad al editor sin comprometer tiempo real.
