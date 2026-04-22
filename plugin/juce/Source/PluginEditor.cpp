@@ -43,13 +43,13 @@ Lm1894Editor::Lm1894Editor(Lm1894Processor& p)
 
     // Attachments.
     using SliderAtt = juce::AudioProcessorValueTreeState::SliderAttachment;
-    sensitivityAtt_ = std::make_unique<SliderAtt>(apvts, lm1894::param::kSensitivity, sensitivitySlider_);
-    minBwAtt_       = std::make_unique<SliderAtt>(apvts, lm1894::param::kMinBandwidth, minBwSlider_);
-    maxBwAtt_       = std::make_unique<SliderAtt>(apvts, lm1894::param::kMaxBandwidth, maxBwSlider_);
-    attackAtt_      = std::make_unique<SliderAtt>(apvts, lm1894::param::kAttack,       attackSlider_);
-    releaseAtt_     = std::make_unique<SliderAtt>(apvts, lm1894::param::kRelease,      releaseSlider_);
-    outputTrimAtt_  = std::make_unique<SliderAtt>(apvts, lm1894::param::kOutputTrim,   outputTrimSlider_);
-    stageCountAtt_  = std::make_unique<SliderAtt>(apvts, lm1894::param::kStageCount,   stageCountSlider_);
+    sensitivityAtt_ = std::make_unique<SliderAtt>(apvts, lm1894::param::kSensitivityDb,  sensitivitySlider_);
+    minBwAtt_       = std::make_unique<SliderAtt>(apvts, lm1894::param::kMinBandwidthHz, minBwSlider_);
+    maxBwAtt_       = std::make_unique<SliderAtt>(apvts, lm1894::param::kMaxBandwidthHz, maxBwSlider_);
+    attackAtt_      = std::make_unique<SliderAtt>(apvts, lm1894::param::kAttackMs,        attackSlider_);
+    releaseAtt_     = std::make_unique<SliderAtt>(apvts, lm1894::param::kReleaseMs,       releaseSlider_);
+    outputTrimAtt_  = std::make_unique<SliderAtt>(apvts, lm1894::param::kOutputTrimDb,    outputTrimSlider_);
+    stageCountAtt_  = std::make_unique<SliderAtt>(apvts, lm1894::param::kStageCount,      stageCountSlider_);
 
     using ComboAtt  = juce::AudioProcessorValueTreeState::ComboBoxAttachment;
     profileAtt_ = std::make_unique<ComboAtt>(apvts, lm1894::param::kSourceProfile, profileBox_);

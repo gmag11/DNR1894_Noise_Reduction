@@ -17,31 +17,31 @@ juce::AudioProcessorValueTreeState::ParameterLayout Lm1894Processor::createParam
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
 
     params.push_back(std::make_unique<juce::AudioParameterFloat>(
-        juce::ParameterID(param::kSensitivity, 1), "Sensitivity",
-        juce::NormalisableRange<float>(defaults::kSensitivityRange.min, defaults::kSensitivityRange.max, 0.1f),
-        defaults::kSensitivityRange.defaultVal));
+        juce::ParameterID(param::kSensitivityDb, 1), "Sensitivity",
+        juce::NormalisableRange<float>(defaults::sensitivityDb.min, defaults::sensitivityDb.max, 0.1f),
+        defaults::sensitivityDb.defaultValue));
 
     params.push_back(std::make_unique<juce::AudioParameterFloat>(
-        juce::ParameterID(param::kMinBandwidth, 1), "Min Bandwidth",
-        juce::NormalisableRange<float>(defaults::kMinBandwidthRange.min, defaults::kMinBandwidthRange.max, 1.0f,
+        juce::ParameterID(param::kMinBandwidthHz, 1), "Min Bandwidth",
+        juce::NormalisableRange<float>(defaults::minBandwidthHz.min, defaults::minBandwidthHz.max, 1.0f,
             0.3f),  // skew for log-like behaviour
-        defaults::kMinBandwidthRange.defaultVal));
+        defaults::minBandwidthHz.defaultValue));
 
     params.push_back(std::make_unique<juce::AudioParameterFloat>(
-        juce::ParameterID(param::kMaxBandwidth, 1), "Max Bandwidth",
-        juce::NormalisableRange<float>(defaults::kMaxBandwidthRange.min, defaults::kMaxBandwidthRange.max, 1.0f,
+        juce::ParameterID(param::kMaxBandwidthHz, 1), "Max Bandwidth",
+        juce::NormalisableRange<float>(defaults::maxBandwidthHz.min, defaults::maxBandwidthHz.max, 1.0f,
             0.3f),
-        defaults::kMaxBandwidthRange.defaultVal));
+        defaults::maxBandwidthHz.defaultValue));
 
     params.push_back(std::make_unique<juce::AudioParameterFloat>(
-        juce::ParameterID(param::kAttack, 1), "Attack",
-        juce::NormalisableRange<float>(defaults::kAttackRange.min, defaults::kAttackRange.max, 0.01f, 0.5f),
-        defaults::kAttackRange.defaultVal));
+        juce::ParameterID(param::kAttackMs, 1), "Attack",
+        juce::NormalisableRange<float>(defaults::attackMs.min, defaults::attackMs.max, 0.01f, 0.5f),
+        defaults::attackMs.defaultValue));
 
     params.push_back(std::make_unique<juce::AudioParameterFloat>(
-        juce::ParameterID(param::kRelease, 1), "Release",
-        juce::NormalisableRange<float>(defaults::kReleaseRange.min, defaults::kReleaseRange.max, 0.1f, 0.5f),
-        defaults::kReleaseRange.defaultVal));
+        juce::ParameterID(param::kReleaseMs, 1), "Release",
+        juce::NormalisableRange<float>(defaults::releaseMs.min, defaults::releaseMs.max, 0.1f, 0.5f),
+        defaults::releaseMs.defaultValue));
 
     params.push_back(std::make_unique<juce::AudioParameterChoice>(
         juce::ParameterID(param::kSourceProfile, 1), "Source Profile",
@@ -49,15 +49,15 @@ juce::AudioProcessorValueTreeState::ParameterLayout Lm1894Processor::createParam
 
     params.push_back(std::make_unique<juce::AudioParameterInt>(
         juce::ParameterID(param::kStageCount, 1), "Stages",
-        1, 4, static_cast<int>(defaults::kStageCountRange.defaultVal)));
+        1, 4, static_cast<int>(defaults::stageCount.defaultValue)));
 
     params.push_back(std::make_unique<juce::AudioParameterBool>(
         juce::ParameterID(param::kBypass, 1), "Bypass", false));
 
     params.push_back(std::make_unique<juce::AudioParameterFloat>(
-        juce::ParameterID(param::kOutputTrim, 1), "Output Trim",
-        juce::NormalisableRange<float>(defaults::kOutputTrimRange.min, defaults::kOutputTrimRange.max, 0.1f),
-        defaults::kOutputTrimRange.defaultVal));
+        juce::ParameterID(param::kOutputTrimDb, 1), "Output Trim",
+        juce::NormalisableRange<float>(defaults::outputTrimDb.min, defaults::outputTrimDb.max, 0.1f),
+        defaults::outputTrimDb.defaultValue));
 
     return { params.begin(), params.end() };
 }
@@ -66,16 +66,16 @@ lm1894::Lm1894Parameters Lm1894Processor::gatherParameters() const
 {
     using namespace lm1894;
     Lm1894Parameters p;
-    p.sensitivityDb  = apvts_.getRawParameterValue(param::kSensitivity)->load();
-    p.minBandwidthHz = apvts_.getRawParameterValue(param::kMinBandwidth)->load();
-    p.maxBandwidthHz = apvts_.getRawParameterValue(param::kMaxBandwidth)->load();
-    p.attackMs       = apvts_.getRawParameterValue(param::kAttack)->load();
-    p.releaseMs      = apvts_.getRawParameterValue(param::kRelease)->load();
+    p.sensitivityDb  = apvts_.getRawParameterValue(param::kSensitivityDb)->load();
+    p.minBandwidthHz = apvts_.getRawParameterValue(param::kMinBandwidthHz)->load();
+    p.maxBandwidthHz = apvts_.getRawParameterValue(param::kMaxBandwidthHz)->load();
+    p.attackMs       = apvts_.getRawParameterValue(param::kAttackMs)->load();
+    p.releaseMs      = apvts_.getRawParameterValue(param::kReleaseMs)->load();
     p.sourceProfile  = static_cast<SourceProfile>(
                          static_cast<int>(apvts_.getRawParameterValue(param::kSourceProfile)->load()));
     p.stageCount     = static_cast<int>(apvts_.getRawParameterValue(param::kStageCount)->load());
     p.bypass         = apvts_.getRawParameterValue(param::kBypass)->load() >= 0.5f;
-    p.outputTrimDb   = apvts_.getRawParameterValue(param::kOutputTrim)->load();
+    p.outputTrimDb   = apvts_.getRawParameterValue(param::kOutputTrimDb)->load();
     return p;
 }
 

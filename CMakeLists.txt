@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # --- JUCE ---
 # Set JUCE_DIR to the path of your JUCE installation, or pass via -DJUCE_DIR=...
 if(NOT DEFINED JUCE_DIR)
-    set(JUCE_DIR "${CMAKE_SOURCE_DIR}/JUCE" CACHE PATH "Path to JUCE framework")
+    set(JUCE_DIR "${CMAKE_SOURCE_DIR}/lib/JUCE" CACHE PATH "Path to JUCE framework")
 endif()
 
 if(EXISTS "${JUCE_DIR}/CMakeLists.txt")
