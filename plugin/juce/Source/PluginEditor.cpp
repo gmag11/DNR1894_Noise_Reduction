@@ -26,9 +26,13 @@ Lm1894Editor::Lm1894Editor(Lm1894Processor& p)
     setupSlider(attackSlider_,      attackLabel_,      "Attack",      *this);
     setupSlider(releaseSlider_,     releaseLabel_,     "Release",     *this);
     setupSlider(outputTrimSlider_,  outputTrimLabel_,  "Trim",        *this);
-    setupSlider(stageCountSlider_,  stageCountLabel_,  "Stages",      *this);
     stageCountSlider_.setSliderStyle(juce::Slider::IncDecButtons);
     stageCountSlider_.setTextBoxStyle(juce::Slider::TextBoxLeft, false, 30, 18);
+    addAndMakeVisible(stageCountSlider_);
+    stageCountLabel_.setText("Stages", juce::dontSendNotification);
+    stageCountLabel_.setJustificationType(juce::Justification::centredRight);
+    stageCountLabel_.attachToComponent(&stageCountSlider_, true);  // true = left side
+    addAndMakeVisible(stageCountLabel_);
 
     profileBox_.addItemList({"Generic", "Tape", "FM", "TV"}, 1);
     addAndMakeVisible(profileBox_);
@@ -58,7 +62,7 @@ Lm1894Editor::Lm1894Editor(Lm1894Processor& p)
     using BtnAtt = juce::AudioProcessorValueTreeState::ButtonAttachment;
     bypassAtt_ = std::make_unique<BtnAtt>(apvts, lm1894::param::kBypass, bypassButton_);
 
-    setSize(520, 360);
+    setSize(520, 260);
     startTimerHz(15);
 }
 
@@ -76,29 +80,39 @@ void Lm1894Editor::resized()
     auto area = getLocalBounds().reduced(10);
     area.removeFromTop(30); // title
 
-    const int knobW = 70, knobH = 80;
-    auto row1 = area.removeFromTop(knobH + 20);
+    // Each knob slot: label (18) + knob body (70) + text box (20) = 108 px total.
+    // We hand the full 108 px to the slider so JUCE can place label+body+textbox
+    // without overflowing into the row below.
+    const int knobW      = 70;
+    const int labelH     = 18;
+    const int knobBodyH  = 70;
+    const int textBoxH   = 20;
+    const int knobTotalH = labelH + knobBodyH + textBoxH; // 108
+    const int gap        = 5;
+
+    auto row1 = area.removeFromTop(knobTotalH);
     sensitivitySlider_.setBounds(row1.removeFromLeft(knobW));
-    row1.removeFromLeft(5);
+    row1.removeFromLeft(gap);
     minBwSlider_.setBounds(row1.removeFromLeft(knobW));
-    row1.removeFromLeft(5);
+    row1.removeFromLeft(gap);
     maxBwSlider_.setBounds(row1.removeFromLeft(knobW));
-    row1.removeFromLeft(5);
+    row1.removeFromLeft(gap);
     attackSlider_.setBounds(row1.removeFromLeft(knobW));
-    row1.removeFromLeft(5);
+    row1.removeFromLeft(gap);
     releaseSlider_.setBounds(row1.removeFromLeft(knobW));
-    row1.removeFromLeft(5);
+    row1.removeFromLeft(gap);
     outputTrimSlider_.setBounds(row1.removeFromLeft(knobW));
 
-    area.removeFromTop(10);
+    area.removeFromTop(8);
     auto row2 = area.removeFromTop(30);
-    stageCountSlider_.setBounds(row2.removeFromLeft(100));
-    row2.removeFromLeft(60); // space for "Profile" label
+    row2.removeFromLeft(52);  // space for "Stages" label on the left
+    stageCountSlider_.setBounds(row2.removeFromLeft(80));
+    row2.removeFromLeft(50); // space for "Profile" label
     profileBox_.setBounds(row2.removeFromLeft(100));
     row2.removeFromLeft(10);
     bypassButton_.setBounds(row2.removeFromLeft(80));
 
-    area.removeFromTop(10);
+    area.removeFromTop(8);
     meterLabel_.setBounds(area.removeFromTop(24));
 }
 
