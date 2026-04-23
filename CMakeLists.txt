@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-project(LM1894_DNR VERSION 1.0.0 LANGUAGES CXX)
+project(DNR1894 VERSION 1.0.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -19,12 +19,12 @@ else()
 endif()
 
 # --- Plugin target ---
-juce_add_plugin(LM1894_DNR
+juce_add_plugin(DNR1894
     COMPANY_NAME       "LM1894Project"
-    PLUGIN_NAME        "LM1894 DNR"
+    PLUGIN_NAME        "DNR1894"
     PLUGIN_CODE        Lm18
     FORMATS            VST3 Standalone
-    PRODUCT_NAME       "LM1894 DNR"
+    PRODUCT_NAME       "DNR1894"
     IS_SYNTH           FALSE
     NEEDS_MIDI_INPUT   FALSE
     NEEDS_MIDI_OUTPUT  FALSE
@@ -34,25 +34,25 @@ juce_add_plugin(LM1894_DNR
 )
 
 # --- Sources ---
-target_sources(LM1894_DNR PRIVATE
+target_sources(DNR1894 PRIVATE
     plugin/juce/Source/PluginProcessor.cpp
     plugin/juce/Source/PluginProcessor.h
     plugin/juce/Source/PluginEditor.cpp
     plugin/juce/Source/PluginEditor.h
 )
 
-target_include_directories(LM1894_DNR PRIVATE
+target_include_directories(DNR1894 PRIVATE
     ${CMAKE_SOURCE_DIR}/src
 )
 
-target_compile_definitions(LM1894_DNR PUBLIC
+target_compile_definitions(DNR1894 PUBLIC
     JUCE_WEB_BROWSER=0
     JUCE_USE_CURL=0
     JUCE_VST3_CAN_REPLACE_VST2=0
     JUCE_DISPLAY_SPLASH_SCREEN=0
 )
 
-target_link_libraries(LM1894_DNR
+target_link_libraries(DNR1894
     PRIVATE
         juce::juce_audio_utils
         juce::juce_dsp
