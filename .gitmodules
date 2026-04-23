@@ -1,3 +1,6 @@
 [submodule "lib/JUCE"]
 	path = lib/JUCE
 	url = https://github.com/juce-framework/JUCE.git
+[submodule "mcp/juce-mcp"]
+	path = mcp/juce-mcp
+	url = https://github.com/josmithiii/mcp-servers-jos.git

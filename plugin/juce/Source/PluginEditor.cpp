@@ -17,6 +17,7 @@ static void setupSlider(juce::Slider& s, juce::Label& l, const juce::String& nam
 Lm1894Editor::Lm1894Editor(Lm1894Processor& p)
     : AudioProcessorEditor(p), processor_(p)
 {
+    juce::LookAndFeel::setDefaultLookAndFeel(&lnf_);
     auto& apvts = p.getAPVTS();
 
     setupSlider(sensitivitySlider_, sensitivityLabel_, "Sensitivity", *this);

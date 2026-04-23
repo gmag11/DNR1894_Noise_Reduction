@@ -1,6 +1,7 @@
 #pragma once
 
 #include <juce_audio_processors/juce_audio_processors.h>
+#include "Lm1894LookAndFeel.h"
 
 class Lm1894Processor;
 
@@ -9,7 +10,10 @@ class Lm1894Editor : public juce::AudioProcessorEditor,
 {
 public:
     explicit Lm1894Editor(Lm1894Processor&);
-    ~Lm1894Editor() override = default;
+    ~Lm1894Editor() override
+    {
+        juce::LookAndFeel::setDefaultLookAndFeel(nullptr);
+    }
 
     void paint(juce::Graphics&) override;
     void resized() override;
@@ -44,6 +48,8 @@ private:
         outputTrimAtt_, stageCountAtt_;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> profileAtt_;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment>   bypassAtt_;
+
+    Lm1894LookAndFeel lnf_;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Lm1894Editor)
 };
