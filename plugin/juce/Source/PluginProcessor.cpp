@@ -101,6 +101,9 @@ void Lm1894Processor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiB
     // Ensure stereo.
     if (buffer.getNumChannels() < 2) return;
 
+    if (!standaloneInputEnabled_.load(std::memory_order_relaxed))
+        buffer.clear();
+
     model_.setParameters(gatherParameters());
 
     lm1894::StereoBufferView view{};

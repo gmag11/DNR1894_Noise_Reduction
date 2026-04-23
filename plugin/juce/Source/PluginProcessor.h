@@ -38,6 +38,9 @@ public:
     lm1894::MeterState& getMeterState() { return meterState_; }
     juce::AudioProcessorValueTreeState& getAPVTS() { return apvts_; }
 
+    void setStandaloneInputEnabled(bool enabled) { standaloneInputEnabled_.store(enabled, std::memory_order_relaxed); }
+    bool getStandaloneInputEnabled() const { return standaloneInputEnabled_.load(std::memory_order_relaxed); }
+
 private:
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
     lm1894::Lm1894Parameters gatherParameters() const;
@@ -45,6 +48,7 @@ private:
     juce::AudioProcessorValueTreeState apvts_;
     lm1894::Lm1894Model model_;
     lm1894::MeterState meterState_;
+    std::atomic<bool> standaloneInputEnabled_{true}; // true = pass audio; false = mute (standalone only)
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Lm1894Processor)
 };

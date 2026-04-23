@@ -53,5 +53,8 @@ private:
 
     Lm1894LookAndFeel lnf_;
 
+    juce::TextButton enableInputButton_;
+    void updateInputButton(bool enabled);
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Lm1894Editor)
 };

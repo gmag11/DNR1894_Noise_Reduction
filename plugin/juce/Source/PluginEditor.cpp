@@ -62,6 +62,20 @@ Lm1894Editor::Lm1894Editor(Lm1894Processor& p)
     using BtnAtt = juce::AudioProcessorValueTreeState::ButtonAttachment;
     bypassAtt_ = std::make_unique<BtnAtt>(apvts, lm1894::param::kBypass, bypassButton_);
 
+    if (processor_.wrapperType == juce::AudioProcessor::wrapperType_Standalone)
+    {
+        // Start muted — safe default to avoid feedback on launch.
+        processor_.setStandaloneInputEnabled(false);
+        updateInputButton(false);
+        enableInputButton_.onClick = [this]()
+        {
+            bool nowEnabled = !processor_.getStandaloneInputEnabled();
+            processor_.setStandaloneInputEnabled(nowEnabled);
+            updateInputButton(nowEnabled);
+        };
+        addAndMakeVisible(enableInputButton_);
+    }
+
     setSize(520, 260);
     startTimerHz(15);
 }
@@ -143,6 +157,13 @@ void Lm1894Editor::resized()
     profileBox_.setBounds(row2.removeFromLeft(100));
     row2.removeFromLeft(10);
     bypassButton_.setBounds(row2.removeFromLeft(80));
+#if JUCE_STANDALONE_APPLICATION
+    if (enableInputButton_.isVisible())
+    {
+        row2.removeFromLeft(8);
+        enableInputButton_.setBounds(row2.removeFromLeft(90));
+    }
+#endif
 
     area.removeFromTop(8);
     // Bandwidth bar.
@@ -163,4 +184,20 @@ void Lm1894Editor::timerCallback()
     float reduction = m.estimatedReductionDb.load(std::memory_order_relaxed);
     meterLabel_.setText(juce::String(reduction, 1) + " dB reduction",
                         juce::dontSendNotification);
+}
+
+void Lm1894Editor::updateInputButton(bool enabled)
+{
+    if (enabled)
+    {
+        enableInputButton_.setButtonText("[ON]  Input");
+        enableInputButton_.setColour(juce::TextButton::buttonColourId, juce::Colour(0xff0d3d0d));
+        enableInputButton_.setColour(juce::TextButton::textColourOffId, juce::Colour(0xff44ee44));
+    }
+    else
+    {
+        enableInputButton_.setButtonText("[OFF] Input");
+        enableInputButton_.setColour(juce::TextButton::buttonColourId, juce::Colour(0xff4a1010));
+        enableInputButton_.setColour(juce::TextButton::textColourOffId, juce::Colour(0xffdd4444));
+    }
 }
