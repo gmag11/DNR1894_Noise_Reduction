@@ -41,6 +41,8 @@ private:
 
     // Meter.
     juce::Label meterLabel_;
+    float meterDisplayLevel_ = 0.0f;       // smoothed 0-1 for bar drawing
+    juce::Rectangle<float> barBounds_;     // set in resized(), used in paint() + timer
 
     // Attachments.
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment>

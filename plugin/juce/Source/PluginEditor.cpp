@@ -73,6 +73,38 @@ void Lm1894Editor::paint(juce::Graphics& g)
     g.setFont(16.0f);
     g.drawText("LM1894 Dynamic Noise Reduction", getLocalBounds().removeFromTop(30),
                juce::Justification::centred);
+
+    if (barBounds_.isEmpty()) return;
+
+    // Track (full range, dark).
+    g.setColour(juce::Colour(0xff2a2a2a));
+    g.fillRoundedRectangle(barBounds_, 4.0f);
+
+    // Fill (active portion, green gradient left→right).
+    const float fillW = barBounds_.getWidth() * meterDisplayLevel_;
+    if (fillW > 0.5f)
+    {
+        juce::Rectangle<float> fill(barBounds_.getX(), barBounds_.getY(),
+                                    fillW, barBounds_.getHeight());
+        g.setGradientFill(juce::ColourGradient(
+            juce::Colour(0xff0d5c0d), barBounds_.getX(),           0.0f,
+            juce::Colour(0xff44ff66), barBounds_.getRight(),        0.0f,
+            false));
+        g.fillRoundedRectangle(fill, 4.0f);
+
+        // Soft glow at the leading edge.
+        const float glowR = barBounds_.getHeight() * 1.2f;
+        const float glowX = barBounds_.getX() + fillW;
+        const float glowY = barBounds_.getCentreY();
+        juce::ColourGradient glow(juce::Colour(0x8844ff66), glowX, glowY,
+                                  juce::Colour(0x0044ff66), glowX + glowR, glowY, true);
+        g.setGradientFill(glow);
+        g.fillEllipse(glowX - glowR, glowY - glowR, glowR * 2.0f, glowR * 2.0f);
+    }
+
+    // Track border.
+    g.setColour(juce::Colour(0xff404040));
+    g.drawRoundedRectangle(barBounds_, 4.0f, 1.0f);
 }
 
 void Lm1894Editor::resized()
@@ -113,12 +145,21 @@ void Lm1894Editor::resized()
     bypassButton_.setBounds(row2.removeFromLeft(80));
 
     area.removeFromTop(8);
-    meterLabel_.setBounds(area.removeFromTop(24));
+    // Bandwidth bar.
+    barBounds_ = area.removeFromTop(10).reduced(0, 1).toFloat();
+    area.removeFromTop(6);
+    meterLabel_.setBounds(area.removeFromTop(20));
 }
 
 void Lm1894Editor::timerCallback()
 {
     auto& m = processor_.getMeterState();
+
+    // Smoothed bar level (first-order, ~80 ms at 15 Hz).
+    float raw = m.normalizedBandwidthOpen.load(std::memory_order_relaxed);
+    meterDisplayLevel_ += 0.15f * (raw - meterDisplayLevel_);
+    repaint(barBounds_.toNearestInt());
+
     float reduction = m.estimatedReductionDb.load(std::memory_order_relaxed);
     meterLabel_.setText(juce::String(reduction, 1) + " dB reduction",
                         juce::dontSendNotification);

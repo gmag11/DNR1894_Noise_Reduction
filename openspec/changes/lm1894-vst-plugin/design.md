@@ -495,3 +495,14 @@ El trabajo posterior debería seguir este desglose:
 - Los perfiles FM y TV pertenecen más al contexto de aplicación que al núcleo del IC; incluirlos mejora utilidad práctica, pero introduce alcance adicional.
 - Si la automatización o el cambio de cutoff no se suavizan correctamente, el plugin puede introducir artefactos que el hardware original no produce de manera perceptible.
 - La reducción subjetiva de ruido depende del material; por eso la spec debe definir métricas objetivas y no sólo promesas auditivas amplias.
+
+### 20. Visualización de apertura del filtro — barra de gradiente continua
+
+**Decisión**: el editor muestra una barra horizontal de ancho completo entre la fila de controles y el label de reducción en dB. La barra representa `normalizedBandwidthOpen` (0 = cerrado, 1 = abierto) con:
+
+- **Track** (fondo): rectángulo redondeado gris oscuro, ancho 100%, altura ~10 px.
+- **Fill** (zona activa): mismo rectángulo rellenado hasta `level * width`, con gradiente horizontal verde oscuro → verde brillante de izquierda a derecha.
+- **Glow puntual**: elipse difuminada semitransparente en el extremo derecho de la zona activa, que añade luminosidad sin romper la continuidad.
+- **Suavizado en editor**: coeficiente de primer orden `α = 0.15` (~80 ms a 15 Hz) para evitar parpadeo visual sin perder legibilidad dinámica.
+- **Semántica**: izquierda = filtro cerrado (min bandwidth), derecha = filtro abierto (max bandwidth). La posición es relativa al rango configurado por el usuario, no absoluta en Hz.
+- **Repintado parcial**: `timerCallback()` llama `repaint(barBounds_)` en lugar de repintar el editor completo.
