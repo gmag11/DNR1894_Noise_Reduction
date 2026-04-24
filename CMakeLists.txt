@@ -23,6 +23,8 @@ juce_add_plugin(DNR1894
     COMPANY_NAME       "LM1894Project"
     PLUGIN_NAME        "DNR1894"
     PLUGIN_CODE        Lm18
+    ICON_BIG           "${CMAKE_SOURCE_DIR}/plugin/juce/Resources/ICON_BIG.png"
+    ICON_SMALL         "${CMAKE_SOURCE_DIR}/plugin/juce/Resources/ICON_SMALL.png"
     FORMATS            VST3 Standalone
     PRODUCT_NAME       "DNR1894"
     IS_SYNTH           FALSE
