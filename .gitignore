@@ -3,7 +3,7 @@
 .env
 
 # Build output
-build/
+build/**
 out/
 
 # Compiled binaries
