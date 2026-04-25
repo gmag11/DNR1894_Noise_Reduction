@@ -33,3 +33,4 @@ __pycache__/
 *.user
 *.suo
 CMakeSettings.json
+mcp.json
